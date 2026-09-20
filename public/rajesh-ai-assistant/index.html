@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raj — AI Voice Assistant Demo | Rajesh Kuna Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── TOKENS ──────────────────────────────────────────────────────── */
+    :root {
+      --bg:          #070910;
+      --bg-card:     rgba(14, 18, 30, 0.90);
+      --bg-glass:    rgba(255, 255, 255, 0.04);
+      --border:      rgba(255, 255, 255, 0.07);
+      --border-glow: rgba(99, 179, 255, 0.40);
+
+      --accent:      #63b3ff;
+      --accent-dim:  rgba(99, 179, 255, 0.14);
+      --accent2:     #56e0a0;
+      --accent2-dim: rgba(86, 224, 160, 0.14);
+      --danger:      #ff5c5c;
+
+      --text-primary:   #eef2ff;
+      --text-secondary: #7b87a8;
+      --text-dim:       #3d4762;
+
+      --caption-agent:  #a5d8ff;
+      --caption-user:   #c3fae8;
+
+      --font: 'Inter', -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --ease: cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    /* ─── SCENE WRAPPER ───────────────────────────────────────────────── */
+    .scene {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Deep star field */
+    .scene::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 70%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 35% 85%, rgba(255,255,255,0.2) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 55%, rgba(255,255,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 10% 60%, rgba(255,255,255,0.2) 0%, transparent 100%),
+        radial-gradient(2px 2px at 50% 30%, rgba(99,179,255,0.3) 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 45%, rgba(255,255,255,0.2) 0%, transparent 100%),
+        radial-gradient(1px 1px at 70% 90%, rgba(255,255,255,0.15) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    /* Ambient colour blobs */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+    }
+    .blob-1 {
+      width: 640px; height: 640px;
+      background: radial-gradient(circle, rgba(37,99,235,0.22) 0%, transparent 70%);
+      top: -200px; left: -160px;
+      animation: drift-a 20s ease-in-out infinite alternate;
+    }
+    .blob-2 {
+      width: 480px; height: 480px;
+      background: radial-gradient(circle, rgba(14,165,233,0.15) 0%, transparent 70%);
+      bottom: -140px; right: -100px;
+      animation: drift-b 26s ease-in-out infinite alternate;
+    }
+    .blob-3 {
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(86,224,160,0.10) 0%, transparent 70%);
+      top: 40%; left: 60%;
+      animation: drift-c 16s ease-in-out infinite alternate;
+    }
+    @keyframes drift-a { to { transform: translate(70px, 50px) scale(1.12); } }
+    @keyframes drift-b { to { transform: translate(-50px, -60px) scale(1.18); } }
+    @keyframes drift-c { to { transform: translate(-40px, 30px) scale(0.88); } }
+
+    /* ─── LAYOUT: two-column ──────────────────────────────────────────── */
+    .layout {
+      display: flex;
+      align-items: center;
+      gap: 52px;
+      position: relative;
+      z-index: 1;
+      transform-origin: center center;
+    }
+
+    /* ─── LEFT PANEL — tech stack & title ──────────────────────────────── */
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      max-width: 380px;
+      opacity: 0;
+      transform: translateX(-32px);
+      animation: slide-in-left 0.8s var(--ease) 0.3s forwards;
+    }
+
+    @keyframes slide-in-left {
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .brand-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(99,179,255,0.25);
+      background: rgba(99,179,255,0.07);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      width: fit-content;
+    }
+    .brand-tag .dot-live {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent2);
+      animation: pulse-dot 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.3; transform: scale(0.6); }
+    }
+
+    .hero-title {
+      font-size: 38px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+    }
+    .hero-title span {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 14.5px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+
+    /* Tech stack pills */
+    .stack-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .stack-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: default;
+    }
+    .pill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .pill.livekit  { border-color: rgba(99,179,255,0.3); color: var(--accent); background: rgba(99,179,255,0.08); }
+    .pill.deepgram { border-color: rgba(86,224,160,0.3); color: var(--accent2); background: rgba(86,224,160,0.08); }
+    .pill.cartesia { border-color: rgba(246,166,35,0.3); color: #f6a623; background: rgba(246,166,35,0.08); }
+    .pill.ollama   { border-color: rgba(167,139,250,0.3); color: #a78bfa; background: rgba(167,139,250,0.08); }
+    .pill.python   { border-color: rgba(255,214,0,0.3);  color: #ffd600; background: rgba(255,214,0,0.08); }
+    .pill.react    { border-color: rgba(97,219,251,0.3);  color: #61dbfb; background: rgba(97,219,251,0.08); }
+    .pill.fastapi  { border-color: rgba(0,201,167,0.3);   color: #00c9a7; background: rgba(0,201,167,0.08); }
+
+    .pill .icon { font-size: 13px; }
+
+    /* Pipeline diagram */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .pipe-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .pipe-box {
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .pipe-box.stt  { background: rgba(86,224,160,0.12);  color: var(--accent2); border: 1px solid rgba(86,224,160,0.2); }
+    .pipe-box.llm  { background: rgba(167,139,250,0.12); color: #a78bfa; border: 1px solid rgba(167,139,250,0.2); }
+    .pipe-box.tts  { background: rgba(246,166,35,0.12);  color: #f6a623; border: 1px solid rgba(246,166,35,0.2); }
+    .pipe-box.lk   { background: rgba(99,179,255,0.12);  color: var(--accent); border: 1px solid rgba(99,179,255,0.2); }
+    .pipe-lbl { font-size: 9px; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; }
+    .pipe-arrow {
+      color: var(--text-dim);
+      font-size: 14px;
+      margin-top: -12px;
+      animation: arrow-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes arrow-pulse {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50%       { opacity: 0.8; transform: scale(1.15); }
+    }
+
+    /* ─── PHONE MOCKUP ────────────────────────────────────────────────── */
+    .phone-wrap {
+      position: relative;
+      opacity: 0;
+      transform: translateY(28px) scale(0.96);
+      animation: phone-enter 0.9s var(--ease) 0.5s forwards;
+    }
+    @keyframes phone-enter {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Floating glow behind phone */
+    .phone-glow {
+      position: absolute;
+      inset: -40px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,179,255,0.12) 0%, transparent 70%);
+      animation: glow-breathe 3s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes glow-breathe {
+      to { opacity: 0.6; transform: scale(1.1); }
+    }
+
+    .phone-frame {
+      position: relative;
+      width: 300px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 36px;
+      box-shadow:
+        0 0 0 6px rgba(255,255,255,0.03),
+        0 32px 100px rgba(0,0,0,0.7),
+        0 0 60px rgba(99,179,255,0.12);
+      backdrop-filter: blur(28px);
+      overflow: hidden;
+      padding: 24px 16px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    /* Top decorative bar */
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 12%; right: 12%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0.5;
+    }
+
+    /* Notch */
+    .phone-notch {
+      width: 80px; height: 20px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 0 0 14px 14px;
+      margin-bottom: 16px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .notch-cam {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(40,40,60,0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .notch-speaker {
+      width: 28px; height: 3px;
+      border-radius: 2px;
+      background: rgba(40,40,60,0.9);
+    }
+
+    /* ── Avatar section ── */
+    .avatar-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .avatar-ring {
+      position: relative;
+      width: 96px;
+      height: 96px;
+    }
+    .avatar-ring::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        transparent 0%,
+        var(--accent) 30%,
+        transparent 60%,
+        var(--accent2) 80%,
+        transparent 100%
+      );
+      opacity: 0;
+      transition: opacity 0.4s, box-shadow 0.4s;
+      border-radius: 50%;
+    }
+    .avatar-ring.speaking::before {
+      opacity: 1;
+      animation: ring-spin 1.6s linear infinite;
+      box-shadow: 0 0 24px rgba(59,130,246,0.7), 0 0 48px rgba(86,224,160,0.4);
+    }
+    @keyframes ring-spin { to { transform: rotate(360deg); } }
+
+    /* gap ring */
+    .avatar-ring::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 50%;
+      background: var(--bg-card);
+    }
+
+    .avatar-img {
+      position: relative;
+      z-index: 1;
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1a3a6b 0%, #0d1f42 100%);
+      border: 2px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -1px;
+      user-select: none;
+      transition: border-color 0.3s;
+    }
+    .avatar-ring.speaking .avatar-img {
+      animation: avatar-pulse 1.2s ease-in-out infinite alternate;
+      border-color: rgba(99,179,255,0.5);
+    }
+    @keyframes avatar-pulse {
+      to { transform: scale(1.04); filter: brightness(1.15); }
+    }
+
+    .profile-name {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      text-align: center;
+    }
+    .profile-role {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-align: center;
+      letter-spacing: 0.01em;
+    }
+
+    /* Status badge */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      transition: all 0.3s;
+    }
+    .status-badge.connected    { background: rgba(86,224,160,0.12); color: var(--accent2); }
+    .status-badge.connected .s-dot { background: var(--accent2); animation: pulse-dot 1.4s ease-in-out infinite; }
+    .status-badge.speaking     { background: rgba(99,179,255,0.12); color: var(--accent); }
+    .status-badge .s-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .eq-bars { display: flex; align-items: flex-end; gap: 2px; height: 12px; }
+    .eq-bar { width: 3px; border-radius: 2px; background: var(--accent); }
+    .eq-bar:nth-child(1) { animation: eq1 0.7s ease-in-out infinite alternate; }
+    .eq-bar:nth-child(2) { animation: eq2 0.9s ease-in-out infinite alternate; }
+    .eq-bar:nth-child(3) { animation: eq3 0.6s ease-in-out infinite alternate; }
+    @keyframes eq1 { from { height: 4px; } to { height: 12px; } }
+    @keyframes eq2 { from { height: 8px; } to { height: 3px; } }
+    @keyframes eq3 { from { height: 5px; } to { height: 11px; } }
+
+    /* ── Captions ── */
+    .captions-area {
+      width: 100%;
+      height: 200px;
+      position: relative;
+      margin: 8px 0;
+      overflow: hidden;
+    }
+    .captions-area::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 20px;
+      background: linear-gradient(to bottom, var(--bg-card), transparent);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .captions-scroll {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      padding: 8px 4px 8px 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      scroll-behavior: smooth;
+    }
+    .captions-scroll::-webkit-scrollbar { width: 4px; }
+    .captions-scroll::-webkit-scrollbar-thumb { background: rgba(99,179,255,0.3); border-radius: 2px; }
+
+    .caption-item {
+      padding: 7px 10px;
+      border-radius: 8px;
+      animation: cap-in 0.3s ease forwards;
+      opacity: 0;
+    }
+    .caption-item.agent {
+      background: rgba(99,179,255,0.07);
+      border-left: 2px solid var(--caption-agent);
+      align-self: flex-start;
+      max-width: 95%;
+    }
+    .caption-item.user {
+      background: rgba(86,224,160,0.07);
+      border-left: 2px solid var(--caption-user);
+      align-self: flex-end;
+      max-width: 95%;
+    }
+    .cap-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.5;
+      margin-bottom: 2px;
+    }
+    .caption-item.agent .cap-label { color: var(--caption-agent); }
+    .caption-item.user  .cap-label { color: var(--caption-user); }
+    .cap-text {
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+    @keyframes cap-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: rgba(99,179,255,0.07);
+      border-left: 2px solid var(--caption-agent);
+      align-self: flex-start;
+      width: fit-content;
+    }
+    .typing-indicator.visible { display: flex; }
+    .typing-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .typing-dot:nth-child(1) { animation: tdot 1.2s ease-in-out 0s infinite; }
+    .typing-dot:nth-child(2) { animation: tdot 1.2s ease-in-out 0.2s infinite; }
+    .typing-dot:nth-child(3) { animation: tdot 1.2s ease-in-out 0.4s infinite; }
+    @keyframes tdot {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40%            { transform: scale(1.2); opacity: 1; }
+    }
+
+    /* ── Controls ── */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      width: 100%;
+      padding: 10px 0 2px;
+    }
+
+    .ctrl-btn {
+      display: flex; align-items: center; justify-content: center;
+      border: none; border-radius: 50%; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .ctrl-btn:hover { transform: scale(1.06); }
+    .ctrl-btn:active { transform: scale(0.93); }
+
+    .ctrl-btn.mute {
+      width: 44px; height: 44px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    .ctrl-btn.end {
+      width: 56px; height: 56px;
+      background: var(--danger);
+      color: #fff;
+      box-shadow: 0 6px 24px rgba(255,92,92,0.4);
+    }
+    .ctrl-btn.end:hover { box-shadow: 0 6px 32px rgba(255,92,92,0.6); }
+    .ctrl-btn.chat {
+      width: 44px; height: 44px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .ctrl-btn svg { width: 20px; height: 20px; pointer-events: none; }
+    .ctrl-btn.end svg { width: 24px; height: 24px; }
+
+    /* ── Sound wave visualizer under avatar ── */
+    .wave-vis {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      height: 20px;
+      margin: -4px 0 4px;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .wave-vis.active { opacity: 1; }
+    .wave-bar {
+      width: 3px;
+      border-radius: 2px;
+      background: linear-gradient(to top, var(--accent), var(--accent2));
+    }
+    .wave-bar:nth-child(1)  { animation: wb 0.8s ease-in-out 0.0s infinite alternate; }
+    .wave-bar:nth-child(2)  { animation: wb 0.7s ease-in-out 0.1s infinite alternate; }
+    .wave-bar:nth-child(3)  { animation: wb 0.9s ease-in-out 0.05s infinite alternate; }
+    .wave-bar:nth-child(4)  { animation: wb 0.6s ease-in-out 0.15s infinite alternate; }
+    .wave-bar:nth-child(5)  { animation: wb 1.0s ease-in-out 0.0s infinite alternate; }
+    .wave-bar:nth-child(6)  { animation: wb 0.75s ease-in-out 0.2s infinite alternate; }
+    .wave-bar:nth-child(7)  { animation: wb 0.85s ease-in-out 0.08s infinite alternate; }
+    .wave-bar:nth-child(8)  { animation: wb 0.65s ease-in-out 0.12s infinite alternate; }
+    .wave-bar:nth-child(9)  { animation: wb 0.95s ease-in-out 0.03s infinite alternate; }
+    @keyframes wb {
+      from { height: 3px; }
+      to   { height: 18px; }
+    }
+
+    /* ─── BOTTOM LABEL ───────────────────────────────────────────────── */
+    .demo-badge {
+      position: absolute;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.07);
+      background: rgba(14,18,30,0.8);
+      backdrop-filter: blur(12px);
+      font-size: 12px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      animation: fade-up 0.8s ease 1.2s both;
+      z-index: 10;
+    }
+    .demo-badge strong { color: var(--text-primary); }
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* ─── INTRO SCREEN ───────────────────────────────────────────────── */
+    #intro-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    #intro-screen.hidden {
+      opacity: 0;
+      transform: scale(1.04);
+      pointer-events: none;
+    }
+
+    .intro-logo {
+      width: 72px; height: 72px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #1a3a6b 0%, #0d1f42 100%);
+      border: 1.5px solid rgba(99,179,255,0.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; font-weight: 800; color: var(--accent);
+      box-shadow: 0 0 40px rgba(99,179,255,0.2);
+      animation: logo-float 3s ease-in-out infinite alternate;
+    }
+    @keyframes logo-float {
+      to { transform: translateY(-6px); box-shadow: 0 8px 60px rgba(99,179,255,0.3); }
+    }
+
+    .intro-title {
+      font-size: 28px; font-weight: 800; letter-spacing: -0.03em;
+      text-align: center;
+    }
+    .intro-title span {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .intro-sub {
+      font-size: 14px; color: var(--text-secondary); text-align: center; max-width: 360px; line-height: 1.6;
+    }
+
+    #intro-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 14px 32px; border-radius: 999px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: #050710; font-family: var(--font); font-size: 14px; font-weight: 700;
+      letter-spacing: 0.01em;
+      box-shadow: 0 8px 32px rgba(99,179,255,0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    #intro-btn:hover { transform: scale(1.04); box-shadow: 0 12px 40px rgba(99,179,255,0.5); }
+    #intro-btn:active { transform: scale(0.97); }
+    #intro-btn svg { width: 18px; height: 18px; }
+
+    /* ─── PROGRESS BAR (for recording) ──────────────────────────────── */
+    #progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      width: 0%;
+      transition: width 0.1s linear;
+      z-index: 200;
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    /* REC indicator */
+    #rec-badge {
+      position: fixed;
+      top: 20px; right: 24px;
+      display: none;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: rgba(255,92,92,0.15);
+      border: 1px solid rgba(255,92,92,0.3);
+      font-size: 11px; font-weight: 700; color: #ff5c5c;
+      letter-spacing: 0.06em;
+      z-index: 200;
+    }
+    #rec-badge.show { display: flex; }
+    #rec-badge .rec-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #ff5c5c;
+      animation: pulse-dot 1s ease-in-out infinite;
+    }
+
+    /* Particle effects */
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div id="progress-bar"></div>
+<!-- REC badge -->
+<div id="rec-badge"><span class="rec-dot"></span> REC</div>
+
+<!-- Intro screen -->
+<div id="intro-screen">
+  <div class="intro-logo">RK</div>
+  <div>
+    <div class="intro-title">Meet <span>Raj</span> — AI Voice Assistant</div>
+  </div>
+  <div class="intro-sub">
+    A LiveKit-powered voice agent that answers questions about Rajesh Kuna's career, projects, and skills — in real time.
+  </div>
+  <button id="intro-btn" onclick="startDemo()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    Play Demo
+  </button>
+</div>
+
+<!-- Main scene -->
+<div class="scene">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- Two-column layout -->
+  <div class="layout">
+
+    <!-- LEFT: Title & stack -->
+    <div class="left-panel">
+      <div>
+        <div class="brand-tag">
+          <span class="dot-live"></span>
+          Live Demo · Rajesh Kuna Portfolio
+        </div>
+      </div>
+
+      <div>
+        <div class="hero-title">AI-Powered<br/>Voice <span>Assistant</span></div>
+        <div class="hero-sub" style="margin-top:12px;">
+          Talk to Raj — an intelligent voice agent that knows everything about Rajesh's experience, skills, and projects. Powered by a real-time STT → LLM → TTS pipeline.
+        </div>
+      </div>
+
+      <div>
+        <div class="stack-label">Tech Stack</div>
+        <div class="stack-grid">
+          <span class="pill livekit"><span class="icon">🔴</span> LiveKit Agents</span>
+          <span class="pill deepgram"><span class="icon">🎙️</span> Deepgram STT</span>
+          <span class="pill cartesia"><span class="icon">🔊</span> Cartesia TTS</span>
+          <span class="pill ollama"><span class="icon">🦙</span> Llama 3.1</span>
+          <span class="pill python"><span class="icon">🐍</span> Python</span>
+          <span class="pill react"><span class="icon">⚛️</span> React + Vite</span>
+          <span class="pill fastapi"><span class="icon">⚡</span> FastAPI</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="stack-label">Voice Pipeline</div>
+        <div class="pipeline">
+          <div class="pipe-node">
+            <div class="pipe-box stt">Deepgram STT</div>
+            <div class="pipe-lbl">Speech → Text</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-node">
+            <div class="pipe-box llm">Llama 3.1</div>
+            <div class="pipe-lbl">Reasoning</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-node">
+            <div class="pipe-box tts">Cartesia TTS</div>
+            <div class="pipe-lbl">Text → Speech</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-node">
+            <div class="pipe-box lk">LiveKit</div>
+            <div class="pipe-lbl">WebRTC</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Phone mockup -->
+    <div class="phone-wrap">
+      <div class="phone-glow"></div>
+      <div class="phone-frame">
+        <!-- Notch -->
+        <div class="phone-notch">
+          <div class="notch-cam"></div>
+          <div class="notch-speaker"></div>
+          <div class="notch-cam"></div>
+        </div>
+
+        <!-- Avatar -->
+        <div class="avatar-section">
+          <div class="avatar-ring" id="avatar-ring">
+            <div class="avatar-img">RK</div>
+          </div>
+
+          <!-- Sound wave -->
+          <div class="wave-vis" id="wave-vis">
+            <div class="wave-bar" style="height:4px;"></div>
+            <div class="wave-bar" style="height:8px;"></div>
+            <div class="wave-bar" style="height:6px;"></div>
+            <div class="wave-bar" style="height:12px;"></div>
+            <div class="wave-bar" style="height:5px;"></div>
+            <div class="wave-bar" style="height:10px;"></div>
+            <div class="wave-bar" style="height:7px;"></div>
+            <div class="wave-bar" style="height:9px;"></div>
+            <div class="wave-bar" style="height:4px;"></div>
+          </div>
+
+          <div class="profile-name">Rajesh Kuna</div>
+          <div class="profile-role">Java Backend Developer · TCS · Hyderabad</div>
+
+          <div class="status-badge connected" id="status-badge">
+            <span class="s-dot" id="status-dot"></span>
+            <span id="status-text">Connected</span>
+          </div>
+        </div>
+
+        <!-- Captions -->
+        <div class="captions-area">
+          <div class="captions-scroll" id="captions-scroll">
+            <div class="typing-indicator" id="typing-indicator">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-bar">
+          <button class="ctrl-btn mute" title="Mute">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+          </button>
+          <button class="ctrl-btn end" title="End call">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07"/>
+              <path d="M14.46 14.46l-9.1-9.1"/>
+            </svg>
+          </button>
+          <button class="ctrl-btn chat" title="Text input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /layout -->
+
+</div><!-- /scene -->
+
+<script>
+  // Dynamically scale the layout to fit the iframe / viewport
+  function fitLayout() {
+    const layout = document.querySelector('.layout');
+    if (!layout) return;
+    const padding = 40;
+    const targetWidth = 850;
+    const targetHeight = 650;
+    const scaleX = (window.innerWidth - padding) / targetWidth;
+    const scaleY = (window.innerHeight - padding) / targetHeight;
+    const scale = Math.min(scaleX, scaleY, 1); // Don't scale up past 1x
+    
+    // Use absolute positioning with transform origin center so flexbox doesn't clip the scaled height
+    layout.style.position = 'absolute';
+    layout.style.top = '50%';
+    layout.style.left = '50%';
+    layout.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  }
+  window.addEventListener('resize', fitLayout);
+  window.addEventListener('DOMContentLoaded', fitLayout);
+  fitLayout();
+</script>
+
+<script>
+  // ─── Demo conversation script ─────────────────────────────────────────
+  const SCRIPT = [
+    {
+      delay: 400,
+      speaker: 'agent',
+      text: "Good afternoon! I'm Raj — Rajesh Kuna's AI voice assistant. I can tell you about his experience, skills, projects, and background. What would you like to know?",
+      speakDuration: 4200,
+    },
+    {
+      delay: 1800,
+      speaker: 'user',
+      text: "What does Rajesh do at TCS?",
+      speakDuration: 0,
+    },
+    {
+      delay: 1200,
+      speaker: 'agent',
+      text: "Rajesh is a Java Backend Developer at TCS with 3 years of experience. He recently served as an onsite technical lead in Johannesburg, South Africa. He's optimized RESTful APIs achieving a 70% reduction in response time across 5+ insurance modules, and engineered 100+ Oracle PL/SQL stored procedures handling 50,000+ daily transactions.",
+      speakDuration: 6000,
+    },
+    {
+      delay: 1800,
+      speaker: 'user',
+      text: "Tell me about his OmniSaina project.",
+      speakDuration: 0,
+    },
+    {
+      delay: 1200,
+      speaker: 'agent',
+      text: "OmniSaina is Rajesh's flagship GitHub project — a real-time multi-vendor food aggregator with an AI engine. It uses Java 21, Spring Boot, Spring AI, Apache Kafka, gRPC, Redis, and React.js. He built an AI chatbot called Saina Bot for natural language food queries, and achieved 45% lower latency using WebFlux and a scatter-gather pattern.",
+      speakDuration: 6000,
+    },
+    {
+      delay: 1800,
+      speaker: 'user',
+      text: "What awards has he received?",
+      speakDuration: 0,
+    },
+    {
+      delay: 1100,
+      speaker: 'agent',
+      text: "Rajesh earned the Star of the Month at TCS for resolving a critical production outage that was affecting over 5,000 policyholders. He also received the Spot on the Team Award for leading consecutive zero-downtime production releases.",
+      speakDuration: 4500,
+    },
+  ];
+
+  let demoRunning = false;
+
+  function startDemo() {
+    const intro = document.getElementById('intro-screen');
+    intro.classList.add('hidden');
+    setTimeout(() => { intro.style.display = 'none'; }, 800);
+
+    document.getElementById('rec-badge').classList.add('show');
+    demoRunning = true;
+    runScript();
+    animateProgress(SCRIPT.reduce((acc, s) => acc + s.delay + s.speakDuration + 1400, 0));
+  }
+
+  function animateProgress(totalMs) {
+    const bar = document.getElementById('progress-bar');
+    const start = Date.now();
+    function tick() {
+      const elapsed = Date.now() - start;
+      const pct = Math.min(100, (elapsed / totalMs) * 100);
+      bar.style.width = pct + '%';
+      if (pct < 100) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  async function runScript() {
+    const scroll = document.getElementById('captions-scroll');
+    const typing = document.getElementById('typing-indicator');
+    const avatarRing = document.getElementById('avatar-ring');
+    const waveVis = document.getElementById('wave-vis');
+    const statusBadge = document.getElementById('status-badge');
+    const statusDot = document.getElementById('status-dot');
+    const statusText = document.getElementById('status-text');
+
+    for (const line of SCRIPT) {
+      await sleep(line.delay);
+
+      if (line.speaker === 'agent') {
+        // Show typing indicator
+        scroll.appendChild(typing);
+        typing.classList.add('visible');
+        scrollBottom(scroll);
+        await sleep(900);
+
+        // Remove typing, add caption
+        typing.classList.remove('visible');
+        addCaption(scroll, 'agent', 'Raj', line.text);
+
+        // Speaking state
+        avatarRing.classList.add('speaking');
+        waveVis.classList.add('active');
+        statusBadge.className = 'status-badge speaking';
+        statusText.textContent = 'Speaking…';
+        statusDot.style.display = 'none';
+
+        await sleep(line.speakDuration);
+
+        avatarRing.classList.remove('speaking');
+        waveVis.classList.remove('active');
+        statusBadge.className = 'status-badge connected';
+        statusText.textContent = 'Connected';
+        statusDot.style.display = '';
+
+      } else {
+        addCaption(scroll, 'user', 'You', line.text);
+      }
+
+      await sleep(300);
+    }
+
+    // Outro
+    await sleep(1200);
+    document.getElementById('rec-badge').classList.remove('show');
+  }
+
+  function addCaption(scroll, role, label, text) {
+    const typing = document.getElementById('typing-indicator');
+    const item = document.createElement('div');
+    item.className = `caption-item ${role}`;
+    item.innerHTML = `<div class="cap-label">${label}</div><div class="cap-text">${text}</div>`;
+    scroll.insertBefore(item, typing);
+    scrollBottom(scroll);
+  }
+
+  function scrollBottom(el) {
+    setTimeout(() => { el.scrollTop = el.scrollHeight; }, 50);
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+</script>
+</body>
+</html>
