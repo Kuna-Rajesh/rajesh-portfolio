@@ -37,7 +37,7 @@ const projects = [
     link: 'https://rajesh-ai-assistant.vercel.app',
     linkText: 'Live App',
     icon: '🤖',
-    media: { type: 'iframe', url: '/rajesh-ai-assistant/index.html' },
+    media: { type: 'iframe', url: '/rajesh-ai-assistant-demo.html' },
     metrics: [
       { icon: '⚡', value: '<500ms', label: 'Response', sub: 'Streamed Tokens' },
       { icon: '🎯', value: '100%', label: 'Accuracy', sub: 'Ground Context' },
